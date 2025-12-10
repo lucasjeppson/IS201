@@ -1,0 +1,22 @@
+H1{
+    color: black;
+    text-align: center;
+    font-size: 100px;
+}
+body{
+    background-color: aqua;
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 40px;
+}
+h2{
+    color: navy;
+    text-align: center;
+    text-decoration: underline;
+    font-size: 80px;
+}
+h3{
+    color: rgb(182, 0, 0);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 40px;
+}

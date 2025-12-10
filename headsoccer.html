@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Head Soccer — Team USA vs World</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green-1:#0b6623;
+    --green-2:#2e8b57;
+    --accent:#adff2f;
+    --panel: rgba(0,0,0,0.35);
+    --glass: rgba(255,255,255,0.06);
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: 'Baloo 2', cursive;
+    background: linear-gradient(180deg,var(--green-1),var(--green-2));
+    color: white;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    text-align:center;
+    padding:18px 12px 6px;
+    font-size:28px;
+    letter-spacing:1px;
+    text-shadow:2px 2px rgba(0,0,0,0.45);
+  }
+
+  .topbar{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    align-items:center;
+    margin-bottom:8px;
+  }
+
+  .panel{
+    background:var(--panel);
+    padding:8px 14px;
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.45), 0 0 10px rgba(173,255,47,0.12);
+    border:2px solid rgba(173,255,47,0.12);
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+
+  .scoreboard{
+    display:flex;
+    gap:18px;
+    align-items:center;
+    font-size:16px;
+  }
+
+  .team {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-width:90px;
+  }
+
+  .team .label{
+    font-size:12px;
+    color:#e9ffe6;
+    opacity:0.9;
+  }
+
+  .team .value{
+    font-weight:700;
+    font-size:20px;
+    color:var(--accent);
+    text-shadow:1px 1px 3px rgba(0,0,0,0.6);
+  }
+
+  #timer{
+    font-size:20px;
+    font-weight:700;
+    color:white;
+    padding:4px 8px;
+    border-radius:8px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.12));
+    border:1px solid rgba(255,255,255,0.04);
+  }
+
+  #game-wrap{
+    width:100%;
+    max-width:900px;
+    margin:18px auto;
+    padding:18px;
+    box-sizing:border-box;
+    border-radius:16px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.22));
+    border: 3px solid rgba(173,255,47,0.12);
+    box-shadow:
+      0 0 18px rgba(173,255,47,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.02);
+    position:relative;
+  }
+
+  canvas{
+    display:block;
+    width:100%;
+    height:450px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+    border-radius:12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    border:6px solid rgba(0,0,0,0.12);
+  }
+
+  .controls{
+    margin-top:12px;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .button{
+    background:var(--glass);
+    border:1px solid rgba(255,255,255,0.06);
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    color:white;
+    font-weight:700;
+    user-select:none;
+    transition: transform .12s ease;
+  }
+  .button:hover{ transform: translateY(-3px); }
+
+  .small{
+    font-size:13px;
+    padding:6px 10px;
+  }
+
+  .mobile-controls{
+    display:flex;
+    gap:8px;
+  }
+
+  .mobile-btn{
+    width:56px;
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.04);
+    font-size:18px;
+    touch-action: manipulation;
+  }
+
+  .footer-note{
+    text-align:center;
+    margin-top:12px;
+    font-size:13px;
+    opacity:0.95;
+  }
+
+  /* responsive tweaks */
+  @media (max-width:600px){
+    canvas{ height:360px; }
+    .team .value{ font-size:18px; }
+  }
+
+  /* nice glowing effect for the currently selected opponent nation name */
+  .opponent-name{
+    font-weight:700;
+    font-size:16px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.06), 0 0 24px rgba(173,255,47,0.09);
+  }
+
+  /* result overlay */
+  .overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.6));
+    border-radius:12px;
+    z-index:20;
+    color:white;
+    font-size:22px;
+    text-align:center;
+    padding:24px;
+    box-sizing:border-box;
+  }
+
+  .small-muted{ font-size:14px; opacity:0.85; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<header>⚽ Head Soccer — Team USA vs The World Cup! ⚽</header>
+
+<div class="topbar" style="justify-content:center">
+  <div class="panel scoreboard">
+    <div class="team">
+      <div class="label">You</div>
+      <div class="value" id="score-player">0</div>
+      <div class="label" style="opacity:0.75">Team USA 🇺🇸</div>
+    </div>
+
+    <div id="timer" title="Time left">60</div>
+
+    <div class="team">
+      <div class="label">Opponent</div>
+      <div class="value" id="score-cpu">0</div>
+      <div class="label opponent-name" id="opponent-name">France 🇫🇷</div>
+    </div>
+  </div>
+</div>
+
+<div id="game-wrap">
+  <canvas id="gameCanvas" width="900" height="450"></canvas>
+
+  <!-- overlay for start/end -->
+  <div id="overlay" class="overlay" style="display:none;">
+    <div>
+      <div id="overlay-text" style="font-size:28px;font-weight:800">You Win!</div>
+      <div class="small-muted" id="overlay-sub">Click "New Game" to play again — opponent will rotate.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px; display:flex; justify-content:center;">
+    <div class="controls">
+      <button class="button small" id="newGameBtn">New Game</button>
+      <button class="button small" id="pauseBtn">Pause</button>
+      <button class="button small" id="resetScoreBtn">Reset Score</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="font-size:13px; opacity:0.9; margin-left:6px;">Controls: A/D or ←/→ = move, W or ↑ = jump, S or ↓ = head</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- mobile-friendly on-screen controls -->
+  <div style="margin-top:12px; display:flex; justify-content:center;">
+    <div class="mobile-controls">
+      <div class="mobile-btn" id="mb-left">◀</div>
+      <div class="mobile-btn" id="mb-jump">▲</div>
+      <div class="mobile-btn" id="mb-right">▶</div>
+      <div class="mobile-btn" id="mb-head">⚽</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">Opponents rotate each new game (World Cup nations). Have fun — try to out-head the CPU!</div>
+
+<script>
+/* ====== Head Soccer: single-file game ======
+   Controls:
+     - Move: A / D or Left / Right
+     - Jump: W or Up
+     - Head: S or Down (apply stronger hit)
+   Features:
+     - 60-second rounds
+     - Opponent rotates from the nations array
+     - Simple AI that chases ball and occasionally jumps/hits
+*/
+
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  // Game state
+  let width = canvas.width;
+  let height = canvas.height;
+  const groundY = height - 60;
+  let lastTime = 0;
+  let running = false;
+  let paused = false;
+
+  // Timer and scoring
+  let roundTime = 60; // seconds per round
+  let timeLeft = roundTime;
+  let timerInterval = null;
+  const scorePlayerEl = document.getElementById('score-player');
+  const scoreCpuEl = document.getElementById('score-cpu');
+  const timerEl = document.getElementById('timer');
+  const overlay = document.getElementById('overlay');
+  const overlayText = document.getElementById('overlay-text');
+  const overlaySub = document.getElementById('overlay-sub');
+  let scorePlayer = 0;
+  let scoreCpu = 0;
+
+  // Opponent nations to rotate (emoji flags included for flair)
+  const nations = [
+    "France 🇫🇷", "Brazil 🇧🇷", "Argentina 🇦🇷", "Germany 🇩🇪", "Spain 🇪🇸",
+    "England 🏴", "Portugal 🇵🇹", "Netherlands 🇳🇱", "Belgium 🇧🇪", "Croatia 🇭🇷",
+    "Uruguay 🇺🇾", "Mexico 🇲🇽", "Japan 🇯🇵", "Senegal 🇸🇳", "Morocco 🇲🇦",
+    "Switzerland 🇨🇭", "USA 🇺🇸", "SouthKorea 🇰🇷", "Australia 🇦🇺", "Portugal 🇵🇹"
+  ];
+  let opponentIndex = 0; // will increment each new game (so first game uses nations[0])
+  const opponentNameEl = document.getElementById('opponent-name');
+
+  // Game objects: players and ball
+  function makePlayer(x, color, isPlayer = false){
+    return {
+      x: x,
+      y: groundY - 60,
+      w: 60,
+      h: 70,
+      vx: 0,
+      vy: 0,
+      speed: 260,
+      jumpSpeed: 520,
+      onGround: true,
+      facing: isPlayer ? 1 : -1,
+      color,
+      isPlayer,
+      canHeadCooldown: 0,
+    };
+  }
+
+  function makeBall(){
+    return {
+      x: width/2,
+      y: groundY - 160,
+      r: 20,
+      vx: 0,
+      vy: 0,
+    };
+  }
+
+  let player = makePlayer(140, '#2b7cff', true);
+  let cpu = makePlayer(width - 200, '#ff4b4b', false);
+  let ball = makeBall();
+
+  // Input
+  const input = {
+    left:false, right:false, up:false, head:false,
+    mobileLeft:false, mobileRight:false, mobileJump:false, mobileHead:false
+  };
+
+  // Helpers
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  // Physics constants
+  const GRAV = 1600;
+  const FRICTION = 0.92;
+  const BALL_AIR_RESIST = 0.998;
+  const BALL_BOUNCE = 0.78;
+  const PLAYER_BOUNCE = 0.55;
+
+  // Game size responsive
+  function resize(){
+    // keep internal resolution fixed to 900x450 for gameplay physics stability,
+    // canvas style scales with CSS width/height.
+    width = canvas.width = 900;
+    height = canvas.height = 450;
+  }
+  resize();
+
+  // Draw helpers
+  function drawBackground(){
+    // field
+    ctx.fillStyle = '#1e6e2f';
+    ctx.fillRect(0, 0, width, groundY + 40);
+
+    // grass stripes
+    const stripeW = 60;
+    for(let i=-1;i<width/stripeW+2;i++){
+      const offset = (i % 2 === 0) ? 0.03 : -0.02;
+      ctx.fillStyle = `rgba(11,102,35,${0.12 + offset})`;
+      ctx.fillRect(i*stripeW, groundY - 90, stripeW, 120);
+    }
+
+    // center line
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(width/2 - 2, groundY - 140, 4, 120);
+
+    // goals (simple rectangles)
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillRect(8, groundY - 70, 6, 70); // left goalpost
+    ctx.fillRect(width-14, groundY - 70, 6, 70); // right goalpost
+
+    // ground shadow strip
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(0, groundY + 40, width, height - (groundY+40));
+  }
+
+  function drawPlayer(p){
+    // shadow
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0, p.h + 10, p.w/2 + 6, 10, 0, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    // body
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 18, p.w/2, p.h/2.4, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // head (circle) — used for collisions (the "head" area)
+    const headX = p.x;
+    const headY = p.y - 22;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(headX, headY, 24, 0, Math.PI*2);
+    ctx.fill();
+
+    // face stripe or emblem
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath();
+    ctx.arc(headX, headY, 24, 0, Math.PI);
+    ctx.fill();
+
+    // jersey accent (small)
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(p.x-18, p.y+6, 36, 12);
+
+    // name under player for clarity
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '12px "Baloo 2", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.isPlayer ? 'USA' : getOpponentShort(), p.x, p.y + p.h + 6);
+  }
+
+  function drawBall(b){
+    // little shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(b.x, Math.min(b.y + b.r + 10, groundY + 30), b.r*1.4, b.r*0.55, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // ball pattern - simple soccer pent shapes approximation
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r-1, 0, Math.PI*2);
+    ctx.stroke();
+
+    // small black pent
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y - b.r * 0.5);
+    ctx.lineTo(b.x + b.r*0.24, b.y - b.r*0.14);
+    ctx.lineTo(b.x + b.r*0.08, b.y + b.r*0.36);
+    ctx.lineTo(b.x - b.r*0.08, b.y + b.r*0.36);
+    ctx.lineTo(b.x - b.r*0.24, b.y - b.r*0.14);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // collision helpers
+  function circleRectCollision(circle, rect){
+    // circle {x,y,r}, rect has x (center), y (top), w,h
+    const rx = rect.x - rect.w/2;
+    const ry = rect.y - rect.h/2;
+    const cx = circle.x;
+    const cy = circle.y;
+    const r = circle.r;
+    // clamp
+    const closestX = clamp(cx, rx, rx + rect.w);
+    const closestY = clamp(cy, ry, ry + rect.h);
+    const dx = cx - closestX;
+    const dy = cy - closestY;
+    return (dx*dx + dy*dy) <= (r*r);
+  }
+
+  // scoring detection (crossing goal line)
+  function checkGoal(){
+    // left goal if ball.x - r <= 0 and y in goal height
+    if (ball.x - ball.r <= 0 && ball.y > groundY - 70 && ball.y < groundY + 10){
+      // goal for CPU
+      scoreCpu++;
+      updateScores();
+      showGoal('Opponent Scores!');
+      return true;
+    }
+    // right goal if ball.x + r >= width
+    if (ball.x + ball.r >= width && ball.y > groundY - 70 && ball.y < groundY + 10){
+      // goal for player
+      scorePlayer++;
+      updateScores();
+      showGoal('You Score!');
+      return true;
+    }
+    return false;
+  }
+
+  // goal popup
+  function showGoal(text){
+    pauseRound();
+    overlay.style.display = 'flex';
+    overlayText.textContent = text;
+    overlaySub.textContent = 'Goal! Click "New Game" to continue (new kickoff).';
+    // small delay, then resume to allow UX? We'll let user press New Game.
+  }
+
+  // update scoreboard UI
+  function updateScores(){
+    scorePlayerEl.textContent = scorePlayer;
+    scoreCpuEl.textContent = scoreCpu;
+  }
+
+  // get short opponent label
+  function getOpponentShort(){
+    const s = nations[opponentIndex % nations.length];
+    return s.split(' ')[0];
+  }
+
+  // reset positions for kickoff
+  function kickoff(side='center'){
+    player.x = 140;
+    player.y = groundY - 60;
+    player.vx = 0;
+    player.vy = 0;
+    player.onGround = true;
+    player.canHeadCooldown = 0;
+
+    cpu.x = width - 200;
+    cpu.y = groundY - 60;
+    cpu.vx = 0;
+    cpu.vy = 0;
+    cpu.onGround = true;
+    cpu.canHeadCooldown = 0;
+
+    ball.x = width/2;
+    ball.y = groundY - 160;
+    ball.vx = (Math.random()*200 - 100);
+    ball.vy = -290;
+  }
+
+  // physics integration and collisions
+  function physics(dt){
+    // dt in seconds
+    // --- players ---
+    [player, cpu].forEach(p => {
+      // horizontal input & friction
+      p.vx *= FRICTION;
+      p.x += p.vx * dt;
+
+      // gravity
+      p.vy += GRAV * dt;
+      p.y += p.vy * dt;
+
+      // ground collision
+      if (p.y > groundY - p.h){
+        p.y = groundY - p.h;
+        p.vy = 0;
+        p.onGround = true;
+      } else {
+        p.onGround = false;
+      }
+
+      // keep inside court
+      const halfW = p.w/2;
+      p.x = clamp(p.x, halfW + 6, width - halfW - 6);
+      // cooldown timers
+      p.canHeadCooldown = Math.max(0, p.canHeadCooldown - dt);
+    });
+
+    // --- ball ---
+    // apply gravity
+    ball.vy += GRAV * dt;
+    // air drag
+    ball.vx *= BALL_AIR_RESIST;
+    ball.vy *= BALL_AIR_RESIST;
+    // integrate
+    ball.x += ball.vx * dt;
+    ball.y += ball.vy * dt;
+
+    // floor
+    if (ball.y + ball.r > groundY){
+      ball.y = groundY - ball.r;
+      // bounce with energy loss
+      ball.vy = -Math.abs(ball.vy) * BALL_BOUNCE;
+      ball.vx *= 0.98;
+      // small friction
+      if (Math.abs(ball.vy) < 30) ball.vy = 0;
+    }
+
+    // side walls bounce (but allow goals)
+    if (ball.x - ball.r < -60){ ball.x = -60 + ball.r; ball.vx = -ball.vx * 0.7; }
+    if (ball.x + ball.r > width + 60){ ball.x = width + 60 - ball.r; ball.vx = -ball.vx * 0.7; }
+
+    // collisions with players (head and body)
+    [player, cpu].forEach(p => {
+      // define head circle
+      const head = {
+        x: p.x,
+        y: p.y - 22,
+        r: 24
+      };
+      // if head touching ball
+      const dx = ball.x - head.x;
+      const dy = ball.y - head.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < ball.r + head.r){
+        // compute normal
+        const nx = dx / (dist || 1);
+        const ny = dy / (dist || 1);
+        // relative velocity
+        const relvx = ball.vx - p.vx;
+        const relvy = ball.vy - p.vy;
+        const relAlongNormal = relvx*nx + relvy*ny;
+        // push ball away
+        const strength = (p.isPlayer ? 720 : 520);
+        // if p is performing head action (head or fast movement), add extra impulse
+        const headBoost = (p.isPlayer ? (input.head || input.mobileHead ? 1.4 : 1.0) : (Math.random() < 0.55 ? 1.1 : 1.0));
+        // only apply if cooldown allows
+        if (p.canHeadCooldown <= 0){
+          ball.vx += nx * strength * headBoost * (1/60);
+          ball.vy += ny * strength * headBoost * (1/60) - 120;
+          p.canHeadCooldown = 0.15; // small cooldown to prevent continuous sticking
+        } else {
+          // small bounce always
+          ball.vx += nx * 160 * (1/60);
+          ball.vy += ny * 160 * (1/60);
+        }
+      }
+
+      // body collision - approximate with rectangle
+      const rect = {
+        x: p.x,
+        y: p.y + p.h/2,
+        w: p.w,
+        h: p.h
+      };
+      if (circleRectCollision(ball, { x: rect.x, y: rect.y, w: rect.w, h: rect.h })){
+        // push the ball away from body
+        const nx = (ball.x - p.x) || 0.01;
+        const ny = (ball.y - (p.y + p.h/2)) || 0.01;
+        const len = Math.sqrt(nx*nx + ny*ny) || 1;
+        const unx = nx/len, uny = ny/len;
+        ball.x = p.x + unx * (p.w/2 + ball.r + 1);
+        ball.y = (p.y + p.h/2) + uny * (p.h/2 + ball.r + 1);
+        ball.vx = unx * 200 + p.vx * 0.4;
+        ball.vy = uny * 200 + p.vy * 0.4;
+      }
+    });
+
+    // small bounds clamp for ball y
+    ball.y = Math.min(ball.y, groundY - ball.r + 4);
+
+    // goal check
+    if (checkGoal()){
+      // stop the round until user kicks off
+      running = false;
+      stopTimer();
+    }
+  }
+
+  // AI simple behavior for CPU
+  function cpuBehavior(dt){
+    // CPU will generally move toward ball's x pos and try to jump/head
+    const targetX = clamp(ball.x + (ball.vx * 0.25), width*0.45, width - 140);
+    const dx = targetX - cpu.x;
+
+    // movement
+    if (Math.abs(dx) > 12){
+      const dir = dx > 0 ? 1 : -1;
+      cpu.vx += dir * cpu.speed * 0.9 * dt;
+      cpu.facing = dir;
+    } else {
+      cpu.vx *= 0.9;
+    }
+
+    // occasionally sprint toward ball
+    if (Math.abs(ball.x - cpu.x) < 140 && Math.random() < 0.01){
+      cpu.vx += (ball.x < cpu.x ? -1 : 1) * 320 * dt;
+    }
+
+    // jumping if ball is above and near
+    const headY = cpu.y - 22;
+    if (ball.y < headY - 10 && Math.abs(ball.x - cpu.x) < 80 && cpu.onGround && Math.random() < 0.6){
+      cpu.vy = -cpu.jumpSpeed * (1 + Math.random() * 0.1);
+      cpu.onGround = false;
+    }
+
+    // if close to ball, attempt head
+    if (Math.abs(ball.x - cpu.x) < 60 && Math.abs(ball.y - (cpu.y - 22)) < 70 && cpu.canHeadCooldown <= 0){
+      // small chance to perform a stronger head
+      if (Math.random() < 0.65){
+        cpu.canHeadCooldown = 0.18;
+        // head effect is in physics collision handler, so just nudge a tiny bit
+        ball.vx += (cpu.x < width/2 ? -1 : 1) * (300 + Math.random()*200);
+        ball.vy -= 120 + Math.random()*80;
+      }
+    }
+  }
+
+  // Input handlers
+  window.addEventListener('keydown', e => {
+    if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') input.left = true;
+    if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') input.right = true;
+    if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') input.up = true;
+    if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') input.head = true;
+    // quick restart
+    if (e.key === 'r' || e.key === 'R') startNewRound();
+  });
+  window.addEventListener('keyup', e => {
+    if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') input.left = false;
+    if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') input.right = false;
+    if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') input.up = false;
+    if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') input.head = false;
+  });
+
+  // Mobile buttons
+  document.getElementById('mb-left').addEventListener('pointerdown', ()=> input.mobileLeft=true);
+  document.getElementById('mb-left').addEventListener('pointerup', ()=> input.mobileLeft=false);
+  document.getElementById('mb-right').addEventListener('pointerdown', ()=> input.mobileRight=true);
+  document.getElementById('mb-right').addEventListener('pointerup', ()=> input.mobileRight=false);
+  document.getElementById('mb-jump').addEventListener('pointerdown', ()=> input.mobileJump=true);
+  document.getElementById('mb-jump').addEventListener('pointerup', ()=> input.mobileJump=false);
+  document.getElementById('mb-head').addEventListener('pointerdown', ()=> input.mobileHead=true);
+  document.getElementById('mb-head').addEventListener('pointerup', ()=> input.mobileHead=false);
+
+  // UI buttons
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    // If overlay visible (goal), hide and kickoff
+    overlay.style.display = 'none';
+    startNewRound();
+  });
+  document.getElementById('pauseBtn').addEventListener('click', () => {
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+    if (!paused && running) startTimer();
+    else stopTimer();
+  });
+  document.getElementById('resetScoreBtn').addEventListener('click', () => {
+    scorePlayer = 0; scoreCpu = 0; updateScores();
+  });
+
+  // start a new round: increment opponent, kickoff, start timer
+  function startNewRound(){
+    overlay.style.display = 'none';
+    opponentIndex = (opponentIndex + 1) % nations.length;
+    opponentNameEl.textContent = nations[opponentIndex];
+    updateScores();
+    kickoff();
+    timeLeft = roundTime;
+    timerEl.textContent = Math.ceil(timeLeft);
+    running = true;
+    paused = false;
+    startTimer();
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  // pause/resume timer helpers
+  function startTimer(){
+    stopTimer();
+    timerInterval = setInterval(() => {
+      if (running && !paused){
+        timeLeft -= 1;
+        if (timeLeft < 0) timeLeft = 0;
+        timerEl.textContent = Math.ceil(timeLeft);
+        if (timeLeft <= 0){
+          // round over
+          finishRound();
+        }
+      }
+    }, 1000);
+  }
+  function stopTimer(){
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+  function pauseRound(){
+    running = false;
+    stopTimer();
+  }
+
+  // end of round
+  function finishRound(){
+    running = false;
+    stopTimer();
+    // determine winner by goals
+    let text;
+    if (scorePlayer > scoreCpu) text = 'Round over — You win!';
+    else if (scorePlayer < scoreCpu) text = 'Round over — Opponent wins!';
+    else text = "Round over — It's a draw!";
+    overlayText.textContent = text;
+    overlaySub.textContent = 'Click "New Game" to play again — opponent will rotate.';
+    overlay.style.display = 'flex';
+  }
+
+  // gameplay main loop
+  function loop(t){
+    if (!lastTime) lastTime = t;
+    const dt = Math.min((t - lastTime)/1000, 1/15); // cap dt for stability
+    lastTime = t;
+
+    // update only if running and not paused
+    if (running && !paused){
+      // player input apply
+      const horiz = (input.left || input.mobileLeft) ? -1 : (input.right || input.mobileRight) ? 1 : 0;
+      if (horiz !== 0){
+        player.vx += horiz * player.speed * dt;
+        player.facing = horiz;
+      }
+      // jump
+      if ((input.up || input.mobileJump) && player.onGround){
+        player.vy = -player.jumpSpeed;
+        player.onGround = false;
+      }
+      // head action: short downward force to head the ball if in air or ground
+      if ((input.head || input.mobileHead) && player.canHeadCooldown <= 0){
+        player.canHeadCooldown = 0.18;
+        // small forward nudge if pressing head
+        player.vx += player.facing * 40;
+        // if ball near, physics collision will handle head impulse
+      }
+
+      // CPU behavior
+      cpuBehavior(dt);
+
+      // physics integration
+      physics(dt);
+    }
+
+    // rendering
+    ctx.clearRect(0,0,width,height);
+    drawBackground();
+    drawBall(ball);
+    drawPlayer(player);
+    drawPlayer(cpu);
+
+    // HUD elements (small)
+    // time & scores already in top bar; draw faint center text showing opponent
+    ctx.font = '20px "Baloo 2", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.textAlign = 'center';
+    ctx.fillText('HEAD SOCCER', width/2, 40);
+
+    // loop
+    if (!paused) requestAnimationFrame(loop);
+  }
+
+  // kick off initial state
+  opponentNameEl.textContent = nations[opponentIndex];
+  updateScores();
+  kickoff('center');
+  timerEl.textContent = Math.ceil(timeLeft);
+
+  // start the first round automatically
+  startNewRound();
+
+  // Ensure the game keeps running if the overlay hidden and running false and no goal
+  // (newGameBtn handles new rounds)
+
+  // resize handling
+  window.addEventListener('resize', () => {
+    // no need to change internal resolution; canvas styled by CSS for responsiveness
+  });
+
+})();
+</script>
+
+</body>
+</html>

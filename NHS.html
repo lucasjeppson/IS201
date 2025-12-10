@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Head Soccer - USA vs World</title>
+<style>
+    body {
+        margin: 0;
+        background: linear-gradient(#0b6623, #2e8b57);
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        user-select: none;
+    }
+
+    #gameCanvas {
+        background: #4CAF50;
+        display: block;
+        margin: auto;
+        border: 5px solid white;
+        box-shadow: 0 0 20px black;
+        margin-top: 40px;
+    }
+
+    #ui {
+        text-align: center;
+        color: white;
+        font-size: 24px;
+        margin-top: 10px;
+    }
+
+    #newGameBtn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 20px;
+        cursor: pointer;
+        border-radius: 10px;
+        border: none;
+        background: gold;
+        display: inline-block;
+    }
+
+    /* CONFETTI */
+    .confetti {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        top: -20px;
+        animation: fall 2.5s linear forwards;
+    }
+
+    @keyframes fall {
+        to {
+            transform: translateY(110vh) rotate(720deg);
+        }
+    }
+
+</style>
+</head>
+
+<body>
+
+<canvas id="gameCanvas" width="900" height="500"></canvas>
+
+<div id="ui">
+    <div id="score">USA 0 - 0 ???</div>
+    <div id="timer">Time: 60</div>
+    <button id="newGameBtn">New Game</button>
+</div>
+
+<script>
+/* ------------------------------
+   WORLD CUP TEAMS
+--------------------------------*/
+const worldCupTeams = [
+    "Brazil", "France", "Argentina", "Germany",
+    "England", "Spain", "Portugal", "Netherlands",
+    "Japan", "South Korea", "Mexico", "Canada"
+];
+
+// Rotate opponents each game
+let opponentTeam = worldCupTeams[Math.floor(Math.random() * worldCupTeams.length)];
+
+/* ------------------------------
+   GAME SETUP
+--------------------------------*/
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let USA = { x: 100, y: 300, width: 40, height: 40, speed: 7 };  // faster
+let CPU = { x: 760, y: 300, width: 40, height: 40, speed: 5 };
+
+let ball = { x: 450, y: 250, radius: 15, dx: 5, dy: 4 };
+
+let keys = {};
+let usaScore = 0;
+let cpuScore = 0;
+let gameTime = 60;
+let gameRunning = false;
+
+/* ------------------------------
+   FIX: NEW GAME BUTTON WORKS
+--------------------------------*/
+document.getElementById("newGameBtn").addEventListener("click", startGame);
+
+/* ------------------------------
+   KEY INPUT
+--------------------------------*/
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+/* ------------------------------
+   CONFETTI
+--------------------------------*/
+function spawnConfetti() {
+    for (let i = 0; i < 50; i++) {
+        let c = document.createElement("div");
+        c.classList.add("confetti");
+        c.style.left = Math.random() * window.innerWidth + "px";
+        c.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        c.style.animationDuration = (2 + Math.random() * 2) + "s";
+        document.body.appendChild(c);
+
+        setTimeout(() => c.remove(), 4000);
+    }
+}
+
+/* ------------------------------
+   RESET POSITIONS AFTER GOAL
+--------------------------------*/
+function resetPositions() {
+    USA.x = 100;
+    USA.y = 230;
+    CPU.x = 760;
+    CPU.y = 230;
+
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dx = (Math.random() > 0.5 ? 5 : -5);
+    ball.dy = (Math.random() > 0.5 ? 4 : -4);
+}
+
+/* ------------------------------
+   START GAME
+--------------------------------*/
+function startGame() {
+    usaScore = 0;
+    cpuScore = 0;
+    gameTime = 60;
+    gameRunning = true;
+    opponentTeam = worldCupTeams[Math.floor(Math.random() * worldCupTeams.length)];
+    resetPositions();
+}
+
+/* ------------------------------
+   PLAYER MOVEMENT (FASTER USA)
+--------------------------------*/
+function movePlayers() {
+    if (keys["ArrowUp"]) USA.y -= USA.speed;
+    if (keys["ArrowDown"]) USA.y += USA.speed;
+
+    // keep inside field
+    USA.y = Math.max(0, Math.min(canvas.height - USA.height, USA.y));
+
+    // Simple CPU AI
+    if (ball.y < CPU.y) CPU.y -= CPU.speed;
+    if (ball.y > CPU.y) CPU.y += CPU.speed;
+}
+
+/* ------------------------------
+   BALL MOVEMENT
+--------------------------------*/
+function moveBall() {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // bounce top/bottom
+    if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height)
+        ball.dy *= -1;
+
+    // collision with players
+    if (ball.x - ball.radius < USA.x + USA.width &&
+        ball.y > USA.y && ball.y < USA.y + USA.height)
+        ball.dx *= -1;
+
+    if (ball.x + ball.radius > CPU.x &&
+        ball.y > CPU.y && ball.y < CPU.y + CPU.height)
+        ball.dx *= -1;
+
+    // GOAL LEFT (CPU scores)
+    if (ball.x - ball.radius < 0) {
+        cpuScore++;
+        spawnConfetti();
+        resetPositions();
+    }
+
+    // GOAL RIGHT (USA scores)
+    if (ball.x + ball.radius > canvas.width) {
+        usaScore++;
+        spawnConfetti();
+        resetPositions();
+    }
+}
+
+/* ------------------------------
+   TIMER
+--------------------------------*/
+setInterval(() => {
+    if (gameRunning) {
+        gameTime--;
+        if (gameTime <= 0) {
+            gameTime = 0;
+            gameRunning = false;
+        }
+    }
+}, 1000);
+
+/* ------------------------------
+   DRAW EVERYTHING
+--------------------------------*/
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // FIELD
+    ctx.fillStyle = "#3BA845";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // CENTER LINE
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.stroke();
+
+    // USA PLAYER
+    ctx.fillStyle = "blue";
+    ctx.fillRect(USA.x, USA.y, USA.width, USA.height);
+
+    // CPU PLAYER
+    ctx.fillStyle = "red";
+    ctx.fillRect(CPU.x, CPU.y, CPU.width, CPU.height);
+
+    // BALL
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    document.getElementById("score").innerHTML =
+        `USA ${usaScore} - ${cpuScore} ${opponentTeam}`;
+
+    document.getElementById("timer").innerHTML = "Time: " + gameTime;
+}
+
+/* ------------------------------
+   GAME LOOP
+--------------------------------*/
+function gameLoop() {
+    if (gameRunning) {
+        movePlayers();
+        moveBall();
+    }
+
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+startGame();
+gameLoop();
+</script>
+
+</body>
+</html>

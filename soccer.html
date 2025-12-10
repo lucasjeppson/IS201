@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>How to Become a Professional Soccer Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(#0b6623, #2e8b57);
+        font-family: 'Baloo 2', cursive;
+        color: white;
+        overflow-x: hidden;
+    }
+
+    /* --- NAVIGATION BAR --- */
+    nav {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        padding: 15px 0;
+        z-index: 1000;
+        border-bottom: 2px solid #adff2f;
+        box-shadow: 0 0 15px #adff2f;
+    }
+
+    nav a {
+        color: #adff2f;
+        margin: 0 20px;
+        font-size: 1.3rem;
+        text-decoration: none;
+        text-shadow: 2px 2px 3px black;
+        transition: 0.3s;
+    }
+
+    nav a:hover {
+        color: white;
+        transform: scale(1.1);
+    }
+
+    header {
+        text-align: center;
+        padding: 100px 20px 40px;
+        font-size: 3rem;
+        text-shadow: 3px 3px #000;
+        letter-spacing: 2px;
+    }
+
+    /* --- Player Silhouette Background --- */
+    .silhouette {
+        position: fixed;
+        left: 5%;
+        bottom: 0;
+        width: 350px;
+        opacity: 0.18;
+        z-index: -1;
+        filter: drop-shadow(0 0 10px black);
+    }
+
+    .container {
+        width: 90%;
+        max-width: 900px;
+        margin: auto;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 30px;
+        border-radius: 20px;
+
+        /* Glowing Border */
+        border: 3px solid #adff2f;
+        box-shadow:
+            0 0 10px #adff2f,
+            0 0 20px #adff2f,
+            0 0 40px #adff2f;
+    }
+
+    ul {
+        font-size: 1.4rem;
+        line-height: 2.2rem;
+    }
+
+    li::marker {
+        color: #adff2f;
+        font-size: 1.3rem;
+    }
+
+    h2 {
+        margin-top: 40px;
+        color: #adff2f;
+        text-shadow: 2px 2px #000;
+    }
+
+    p {
+        font-size: 1.1rem;
+        line-height: 1.7rem;
+        margin-bottom: 20px;
+    }
+
+    .soccer-ball {
+        width: 120px;
+        display: block;
+        margin: 20px auto;
+        filter: drop-shadow(2px 2px 4px #000);
+    }
+
+    /* Floating Soccer Ball Animation */
+    .floating-ball {
+        position: fixed;
+        top: 20vh;
+        right: -150px;
+        width: 100px;
+        animation: floatBall 10s linear infinite;
+        z-index: 999;
+        opacity: 0.9;
+    }
+
+    @keyframes floatBall {
+        0% { transform: translateX(0) rotate(0deg); }
+        50% { transform: translateX(-120vw) rotate(360deg); }
+        100% { transform: translateX(0) rotate(720deg); }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- Navigation Bar -->
+<nav>
+    <a href="#training">Training</a>
+    <a href="#conditioning">Conditioning</a>
+    <a href="#nutrition">Nutrition</a>
+    <a href="#recovery">Recovery</a>
+    <a href="#drills">Drills</a>
+</nav>
+
+<header>⚽ Become a Professional Soccer Player! ⚽</header>
+
+<!-- Floating soccer ball -->
+<img class="floating-ball" src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg">
+
+<!-- Player silhouette -->
+<img class="silhouette" src="https://upload.wikimedia.org/wikipedia/commons/5/59/Soccer_player_silhouette.png">
+
+<img class="soccer-ball" src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg">
+
+<div class="container">
+
+    <ul>
+        <li>Train consistently and master fundamental skills</li>
+        <li>Join competitive teams and seek higher levels of play</li>
+        <li>Develop physical strength, speed, and conditioning</li>
+        <li>Build a strong soccer IQ and study the game</li>
+        <li>Get exposure through showcases, camps, and highlight videos</li>
+        <li>Stay disciplined, resilient, and coachable</li>
+        <li>Fuel your body with optimal nutrition</li>
+        <li>Recover properly to avoid fatigue and injuries</li>
+        <li>Practice specific drills that develop elite-level technique</li>
+    </ul>
+
+    <h2 id="training">Training</h2>
+    <p>
+        Professional players train daily, focusing on dribbling, shooting, passing, and ball control.
+        Repetition builds consistency, precision, and creativity under pressure.
+    </p>
+
+    <h2 id="conditioning">Strength & Conditioning</h2>
+    <p>
+        Elite players combine gym strength work with explosive sprint training, agility exercises,
+        and aerobic conditioning. A balanced athletic profile is essential.
+    </p>
+
+    <h2 id="gameiq">Soccer IQ</h2>
+    <p>
+        Watching pros, analyzing plays, and understanding tactics increase your field awareness.
+        Great decisions often matter more than raw athletic ability.
+    </p>
+
+    <h2 id="nutrition">Nutrition</h2>
+    <p>
+        Eating lean proteins, complex carbs, greens, and proper hydration ensures energy for training
+        and supports muscle recovery. Nutrition directly impacts performance.
+    </p>
+
+    <h2 id="recovery">Recovery</h2>
+    <p>
+        Rest days, good sleep, stretching, cold therapy, and massage keep your body fresh.
+        Recovery prevents burnout and injury while maximizing training output.
+    </p>
+
+    <h2 id="drills">Drills</h2>
+    <p>
+        Cone dribbling, wall passes, ladder footwork, and consistent finishing reps build elite technique.
+        Drills that mimic real-game situations prepare you for professional speed and pressure.
+    </p>
+
+</div>
+
+</body>
+</html>
